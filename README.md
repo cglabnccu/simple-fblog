@@ -5,17 +5,17 @@
     $ node server.js
 
 ##Login & fetch data
-# token.html
+token.html
 
-# query.html
+query.html
 
-# querylog.html
+querylog.html
 
 ## D3.js Bar chart
-#bar.html
+bar.html 
 A static array
 
-#baradd.html
+baradd.html
 A dynamic array, add a random number every 1.5 second
 
 ## Combination
