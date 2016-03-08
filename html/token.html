@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Facebook access token query</title>
+  <meta charset="utf-8">
+
+  <!--references if some js template-->
+  <script src="http://d3js.org/d3.v3.min.js"></script>
+  <script src='https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js'></script>
+  <link rel='stylesheet' href='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css'>
+  <script src='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js'></script>
+</head>
+
+<body>
+  <!-- Post query input field and submit button -->
+  <!-- <input type="text" id="postid_input" placeholder="https://www.facebook.com/{Facebook Page id}/posts/{Facebook post id}" onkeypress="useridKeyPress(event);" size="100"> -->
+  <button type="button" class="btn btn-info" id="submit" onclick="button_submit()"><i class="icon-search icon-white"></i> Get your access token</button>
+
+  <!-- Facebook authorization info and button -->
+  <button class="btn btn-link btn-inverse offset3" id="user-info" class="muted"></button>
+  <button type="button" class="btn btn-inverse" id="fb-auth"></button>
+
+  <div align="left">
+    <!-- <div id="current_like" style="font-size:80px;color:Navy;font-family:Microsoft JhengHei"> -->
+    <!-- </div> -->
+    <div id="access_token"></div>
+  </div>
+  <br>
+  <br>
+  <!-- <div id="fbgraph" align="center"></div> -->
+  <div id="fb-root"></div>
+  <script src="fbOauthLogin.js"></script>
+
+  <script>
+    function useridKeyPress(event) {
+      if (event.keyCode == 13) {
+        button_submit();
+      }
+    }
+
+    function button_submit() {
+      var hello_message = d3.select("#access_token")
+      .append("text")
+      .text("Hello! your Facebook access token is: \n")
+
+      // Reveal the access token from variable ACCESS_TOKEN by fbOauthLogin.js
+      hello_message.append("text")
+      .text(ACCESS_TOKEN);
+    };
+  </script>
+</body>
+</html>

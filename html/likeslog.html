@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Facebook Post Likes Log</title>
+  <meta charset="utf-8">
+
+  <!--references if some js template-->
+  <script src="http://d3js.org/d3.v3.min.js"></script>
+  <script src='https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js'></script>
+  <link rel='stylesheet' href='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css'>
+  <script src='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js'></script>
+</head>
+
+<body>
+  <!-- Post query input field and submit button -->
+  <input type="text" id="postid_input" placeholder="https://www.facebook.com/{Facebook Page id}/posts/{Facebook post id}" onkeypress="useridKeyPress(event);" size="100">
+  <button type="button" class="btn btn-info" id="submit" onclick="button_submit()"><i class="icon-search icon-white"></i> Submit</button>
+
+  <!-- Facebook authorization info and button -->
+  <button class="btn btn-link btn-inverse offset3" id="user-info" class="muted"></button>
+  <button type="button" class="btn btn-inverse" id="fb-auth"></button>
+
+  <div align="center">
+    <div id="current_like" style="font-size:80px;color:Navy;font-family:Microsoft JhengHei">
+    </div>
+  </div>
+  <br>
+  <br>
+  <div id="fbgraph" align="center"></div>
+  <div id="fb-root"></div>
+  <script src="fbOauthLogin.js"></script>
+
+  <script>
+    function useridKeyPress(event) {
+      if (event.keyCode == 13) {
+        button_submit();
+      }
+    }
+
+    function button_submit() {
+      // fb_related_url is related to two formats below:
+      // non photo type post: https://www.facebook.com/(pagename)/posts/(postid)
+      // we want to query a post's data by postid: "(pagename)_postid"
+      var fb_related_url = document.getElementById("postid_input").value,
+        url_pieces = fb_related_url.split("/");
+
+      FB.api(url_pieces[3], function(res) {
+        if (!res.error) {
+          var likes_log_array = [],
+            post_message = "",
+            post_id = 0;
+
+          //Width and height
+          var w = 1300;
+          var h = 300;
+
+          var xScale = d3.scale.ordinal()
+            .domain(d3.range(25))
+            .rangeRoundBands([0, w], 0.05);
+
+          var yScale = d3.scale.pow().exponent(80)
+            .range([0, h]);
+
+          var color_scale = d3.scale.linear()
+            .range(['#f00', '#00f']);
+
+          var op_scale = d3.scale.pow()
+            .range([0, 1]);
+
+          //Create SVG element
+          var svg = d3.select("#fbgraph")
+            .append("svg")
+            .attr("width", w)
+            .attr("height", h);
+
+          function fetchLikesAndVisualize(postid, tokens) {
+            FB.api(
+              "/" + postid + "?fields=id,object_id,type,message,from,shares,likes.limit(1).summary(true),comments.limit(1).summary(true)",
+              function(response) {
+                if (response.error) {
+                  console.log(response);
+                }
+
+                if (response && !response.error) {
+                  var data = response;
+
+                  if (likes_log_array.length >= 25) {
+                    likes_log_array = [];
+                    remove(likes_log_array)
+                  }
+
+                  likes_log_array.push(data.likes.summary.total_count);
+                  post_id = data.id;
+                  post_message = data.message;
+
+                  //current_like.innerHTML = "";
+                  document.getElementById(post_id).innerHTML = "<div style=\"font-size:80px;color:Navy;font-family:Microsoft JhengHei\">" + "Likes: " + data.likes.summary.total_count + "</div>";
+                  //post_id.innerHTML = "<div style=\"font-size:80px;color:Navy;font-family:Microsoft JhengHei\">" + "Likes: " + data.likes.summary.total_count + "</div>";
+
+                  yScale.domain([0, d3.max(likes_log_array)]);
+                  color_scale.domain([0, d3.max(likes_log_array)]);
+                  op_scale.domain([0, d3.max(likes_log_array)]);
+
+                  update(likes_log_array);
+                }
+              });
+          };
+
+          function update(data) {
+
+            var bar = svg.selectAll("rect")
+              .data(data);
+            var likes_text = svg.selectAll("text")
+              .data(data);
+            var current_like =
+
+              bar.transition()
+              .duration(1000)
+              .attr("height", function(d) {
+                return yScale(d);
+              })
+              .attr("x", function(d, i) {
+                return xScale(i);
+              })
+              .attr("y", function(d) {
+                return h - yScale(d);
+              })
+              .attr("fill-opacity", function(d) {
+                return op_scale(d);
+              })
+              .attr("fill", function(d) {
+                return color_scale(d);
+              });
+
+            bar.enter()
+              .append("rect")
+              .attr("id", function(d, i) {
+                return "rect" + i;
+              })
+              .attr("x", function(d, i) {
+                return xScale(i);
+              })
+              .attr("y", function(d) {
+                return h;
+              })
+              .attr("width", 50)
+              .attr("height", yScale)
+              .attr("fill-opacity", function(d) {
+                return op_scale(d);
+              })
+              .attr("fill", function(d) {
+                //return "rgb(0, 0, " + Math.round(color_scale(d)) + ")";
+                return color_scale(d);
+              })
+              .transition()
+              .duration(1000)
+              .attr("height", function(d) {
+                return yScale(d);
+              })
+              .attr("y", function(d) {
+                return h - yScale(d);
+              });
+
+            likes_text.transition()
+              .duration(1000)
+              .text(function(d) {
+                return d;
+              })
+              .attr("y", function(d) {
+                return h - yScale(d) + 14;
+              });
+
+            likes_text.enter()
+              .append("text")
+              .text(function(d) {
+                return d;
+              })
+              .attr("text-anchor", "middle")
+              .attr("x", function(d, i) {
+                return xScale(i) + xScale.rangeBand() / 2;
+              })
+              .attr("y", function(d) {
+                return h + 14;
+              })
+              .attr("font-family", "sans-serif")
+              .attr("font-size", "11px")
+              .attr("fill", "white")
+              .transition()
+              .duration(1000)
+              .attr("y", function(d) {
+                return h - yScale(d) + 14;
+              });
+          }
+
+          function remove(data) {
+            var bar = svg.selectAll("rect")
+              .data(data);
+            var likes_text = svg.selectAll("text")
+              .data(data);
+
+            bar.transition()
+              .duration(750)
+              .attr("x", function(d, i) {
+                return xScale(i - 1);
+              });
+
+            bar.exit()
+              .transition()
+              .duration(750)
+              .attr("fill-opacity", 0)
+              .remove();
+
+            likes_text.exit()
+              .transition()
+              .duration(750)
+              .attr("fill-opacity", 0)
+              .remove();
+          }
+
+          setInterval(function() {
+            fetchLikesAndVisualize(res.id + "_" + url_pieces[5], ACCESS_TOKEN);
+          }, 1000);
+
+          setTimeout(function() {
+            var current_like = d3.select('#fbgraph')
+              .append('div')
+              .attr("id", function(d) {
+                return post_id;
+              })
+              .style({
+                'color': 'Navy',
+                'font-size': '60px',
+                'font-family': 'Microsoft JhengHei'
+              });
+
+            var current_message = d3.select('#fbgraph')
+              .append('div')
+              .html('Message : ' + post_message + "<br><br>")
+              .style({
+                'width': '900px',
+                'color': 'DimGray',
+                'font-size': '16px',
+                'font-family': 'Microsoft JhengHei'
+              });
+          }, 2000);
+        }
+      });
+    };
+  </script>
+</body>
+
+</html>

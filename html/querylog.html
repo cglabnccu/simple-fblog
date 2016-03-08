@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Facebook Post Data</title>
+  <meta charset="utf-8">
+
+  <!--references if some js template-->
+  <script src="http://d3js.org/d3.v3.min.js"></script>
+  <script src='https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js'></script>
+  <link rel='stylesheet' href='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css'>
+  <script src='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js'></script>
+</head>
+
+<body>
+  <!-- Post query input field and submit button -->
+  <input type="text" id="postid_input" placeholder="https://www.facebook.com/{Facebook Page id}/posts/{Facebook post id}" onkeypress="useridKeyPress(event);" size="100">
+  <button type="button" class="btn btn-info" id="submit" onclick="button_submit()"><i class="icon-search icon-white"></i> Submit</button>
+
+  <!-- Facebook authorization info and button -->
+  <button class="btn btn-link btn-inverse offset3" id="user-info" class="muted"></button>
+  <button type="button" class="btn btn-inverse" id="fb-auth"></button>
+
+  <div align="left">
+    <!-- <div id="current_like" style="font-size:80px;color:Navy;font-family:Microsoft JhengHei">
+    </div> -->
+    <div id="post_info"></div>
+  </div>
+  <br>
+  <br>
+  <div id="fbgraph" align="center"></div>
+  <div id="fb-root"></div>
+  <script src="fbOauthLogin.js"></script>
+
+  <script>
+    function useridKeyPress(event) {
+      if (event.keyCode == 13) {
+        button_submit();
+      }
+    }
+
+    function button_submit() {
+      // fb_related_url is related to two formats below:
+      // non photo type post: https://www.facebook.com/(pagename)/posts/(postid)
+      // we want to query a post's data by postid: "(pagename)_postid"
+      var fb_related_url = document.getElementById("postid_input").value,
+        url_pieces = fb_related_url.split("/");
+
+      FB.api(url_pieces[3], function(res) {
+        if (!res.error) {
+
+          function queryPostInfo(postid, tokens) {
+            FB.api(
+              "/" + postid + "?fields=id,object_id,type,message,from,shares,likes.limit(1).summary(true),comments.limit(1).summary(true)",
+              function(response) {
+                if (response.error) {
+                  console.log(response);
+                }
+
+                if (response && !response.error) {
+                  var data = response;
+
+                  var hello_message = d3.select("#post_info")
+                  .append("text")
+                  .text("Hello! your Facebook access token is: \n")
+
+                  // Reveal the access token from variable ACCESS_TOKEN by fbOauthLogin.js
+                  hello_message.append("text")
+                  .text(ACCESS_TOKEN)
+                  .append("p");
+
+                  d3.select("#post_info")
+                  .append("p")
+                  .text("This post is from the Facebook Page: ")
+                  .append("p")
+                  .text(data.from.name);
+
+
+                  d3.select("#post_info")
+                  .append("p")
+                  .text("This post's message is: ")
+                  .append("p")
+                  .text(data.message);
+
+                  if("shares" in data) {
+                    d3.select("#post_info")
+                    .append("p")
+                    .text("Likes: " + data.likes.summary.total_count + " " +
+                          "Comments: " + data.comments.summary.total_count + " " +
+                          "Shares: " + data.shares.count);
+                  } else {
+                    d3.select("#post_info")
+                    .append("p")
+                    .text("Likes: " + data.likes.summary.total_count + " " +
+                          "Comments: " + data.comments.summary.total_count + " " +
+                          "Shares: " + "0");
+                  }
+                }
+              });
+          };
+
+          setInterval(function() {
+            queryPostInfo(res.id + "_" + url_pieces[5], ACCESS_TOKEN);
+          }, 10000);
+        }
+      });
+    };
+  </script>
+</body>
+</html>
