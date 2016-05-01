@@ -2,7 +2,7 @@
 New Javascript SDK & OAuth 2.0 based FBConnect
 http://thinkdiff.net/facebook/new-javascript-sdk-oauth-2-0-based-fbconnect-tutorial/
 */
-var fbapp_id = '',
+var fbapp_id = '1554994131467600',
     login_button,
     user_info,
     ACCESS_TOKEN;
