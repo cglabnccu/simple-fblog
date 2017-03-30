@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="utf-8">
+	<title>D3: Two svg</title>
+	<script src="http://d3js.org/d3.v3.min.js"></script>
+	<style type="text/css">
+		/* No style rules here yet */
+	</style>
+</head>
+
+<body>
+	<div></div>
+	<br>
+	<br>
+	<input type="text" id="postid_input" placeholder="#barsvg2 or #barsvg1" size="20">
+	<button type="button" class="btn btn-info" id="submit" onclick="button_submit()"><i class="icon-search icon-white"></i> Mark Svg</button>
+	<script type="text/javascript">
+		//Width and height
+		var w = 600;
+		var h = 250;
+
+		var dataset1 = [5, 10, 13, 19, 21, 25, 22, 18, 15, 13, 11, 12, 15, 20, 18, 17, 16, 18, 23, 25];
+
+		var dataset2 = [50, 55, 45, 35, 20, 25, 25, 40, 56, 85, 61, 5, 15, 61, 51, 15, 15, 32, 19, 25, 12];
+
+		//Create two SVG element
+		var svg1 = d3.select("div")
+			.append("svg")
+			.attr("id", "svg1")
+			.attr("width", w)
+			.attr("height", h);
+
+		var svg2 = d3.select("div")
+			.append("svg")
+			.attr("id", "svg2")
+			.attr("width", w)
+			.attr("height", h)
+			.attr("x", w + 25);
+
+		d3.select("div")
+			.append("div")
+			.style('position','absolute')
+			.style('top', 275 + "px")
+			.style('left', 275 + "px")
+			.text("barsvg1")
+		
+		d3.select("div")
+			.append("div")
+			.style('position','absolute')
+			.style('top', 275 + "px")
+			.style('left', 875 + "px")
+			.text("barsvg2")
+
+		creatbar("svg1", dataset1);
+		creatbar("svg2", dataset2);
+
+		function button_submit() {
+			var svg = document.getElementById("postid_input").value;
+			var other;
+
+			if (svg == "#barsvg1") {
+				other = "#barsvg2";
+			} else
+				other = "#barsvg1";
+
+			var bar = d3.selectAll(svg);
+
+			bar.attr("fill", function (d) {
+				return "rgb(" + (d * 10) + ", 0, " + (d * 10) + ")";
+			});
+
+			var obar = d3.selectAll(other);
+
+			obar.attr("fill", function (d) {
+				return "rgb( 0, 0, " + (d * 10) + ")";
+			});
+		}
+
+		function creatbar(element, dataset) {
+
+			var xScale = d3.scale.ordinal()
+				.domain(d3.range(dataset.length))
+				.rangeRoundBands([0, w], 0.05);
+
+			var yScale = d3.scale.linear()
+				.domain([0, d3.max(dataset)])
+				.range([0, h]);
+
+			var bar = d3.select("#" + element)
+				.selectAll("rect")
+				.data(dataset);
+
+			bar.enter()
+				.append("rect")
+				.attr("x", function (d, i) {
+					return xScale(i);
+				})
+				.attr("width", xScale.rangeBand())
+				.attr("height", function (d) {
+					return yScale(d);
+				})
+				.attr("fill", function (d) {
+					return "rgb(0, 0, " + (d * 10) + ")";
+				})
+				.attr("id", "bar" + element)
+				.attr("y", function (d) {
+					return h - yScale(d);
+				});
+		}
+	</script>
+</body>
+
+</html>
